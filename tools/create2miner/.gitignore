@@ -1,0 +1,8 @@
+# build artifact
+c2find
+*.o
+# run outputs
+*.log
+*.out
+*.hex
+*.meta
