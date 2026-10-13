@@ -1,3 +1,4 @@
 [submodule "sys-asm"]
 	path = sys-asm
-	url = https://github.com/wemeetagain/sys-asm.git
+	url = https://github.com/ethereum/sys-asm.git
+	branch = main
