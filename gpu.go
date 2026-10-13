@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	crand "crypto/rand"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"math/big"
@@ -61,9 +63,24 @@ func (t *task) runGPU() error {
 	fmt.Printf("GPU mining on %s (batch size %d)\n", name, totalBatch)
 	fmt.Printf("Target: prefix=0x%x suffix=0x%x\n", t.prefix, t.suffix)
 
+	// The GPU scans candidates sequentially (s = sigS + nonce, for nonce =
+	// start, start+1, ...), so re-running with the same start re-scans the
+	// identical range and returns the same address. Default to a random start
+	// so repeated runs explore fresh regions; --start-nonce pins it when a
+	// reproducible search is wanted.
+	nonce := t.startNonce
+	if nonce == 0 {
+		var seed [8]byte
+		if _, err := crand.Read(seed[:]); err != nil {
+			return fmt.Errorf("failed to seed random start nonce: %w", err)
+		}
+		nonce = binary.BigEndian.Uint64(seed[:])
+	}
+	fmt.Printf("Start nonce: %d\n", nonce)
+
 	start := time.Now()
 	lastLog := start
-	var nonce, total uint64
+	var total uint64
 	for {
 		res, _, err := runner.Mine(p, t.prefix, t.suffix, nonce)
 		if err != nil {

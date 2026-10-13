@@ -106,6 +106,12 @@ var (
 		Usage: "number of candidates per GPU batch",
 		Value: 1048576,
 	}
+	startNonceFlag = &cli.UintFlag{
+		Name:        "start-nonce",
+		Usage:       "GPU search start offset (candidate s = sigS + nonce); 0 = random start each run",
+		Value:       0,
+		DefaultText: "random",
+	}
 
 	app = &cli.Command{
 		Name:  "nick",
@@ -116,7 +122,8 @@ var (
 				Usage: "Search for a vanity address to deploy a contract using nicks method.",
 				Flags: []cli.Flag{threadsFlag, scoreFlag, prefixFlag, suffixFlag,
 					initcodeFlag, gasLimitFlag, gasPriceFlag, sigRFlag,
-					gpuFlag, gpuBackendFlag, gpuDeviceFlag, gpuDevicesFlag, batchSizeFlag},
+					gpuFlag, gpuBackendFlag, gpuDeviceFlag, gpuDevicesFlag, batchSizeFlag,
+					startNonceFlag},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					f := task{
 						prefix:     common.FromHex(cmd.String(prefixFlag.Name)),
@@ -132,6 +139,7 @@ var (
 						gpuDevice:  int(cmd.Int(gpuDeviceFlag.Name)),
 						gpuDevices: cmd.String(gpuDevicesFlag.Name),
 						batchSize:  int(cmd.Int(batchSizeFlag.Name)),
+						startNonce: cmd.Uint(startNonceFlag.Name),
 						highscore:  &atomic.Uint64{},
 						count:      &atomic.Uint64{},
 						quit:       make(chan struct{}),
@@ -200,6 +208,7 @@ type task struct {
 	gpuDevice  int
 	gpuDevices string
 	batchSize  int
+	startNonce uint64
 
 	highscore *atomic.Uint64
 	count     *atomic.Uint64
